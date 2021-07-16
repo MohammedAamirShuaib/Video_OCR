@@ -12,9 +12,11 @@ import re
 from IPython.display import Image
 from google.oauth2 import service_account
 credentials = service_account.Credentials.from_service_account_file("Translation API-b9a2439f440d.json")
+import six
+from google.cloud import translate_v2 as translate
 import glob, os
 import pytesseract
-from google.cloud import translate
+#from google.cloud import translate
 from skimage.metrics import structural_similarity as compare_ssim
 pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesseract.exe'
 try:
@@ -43,6 +45,21 @@ from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
 brands = ["Braun","Conair","Panasonic","Philips","Remington","Wahl","Gillette","Idea Village","SEB","Datsumo","Ke-non","Silk'n","Ya-man","Rei Beaute","Norelco"]
 
 # Return Frame run time
+def translate_text_with_model(target, text, model="nmt"):
+    """Translates text into the target language.
+    Make sure your project is allowlisted.
+    Target must be an ISO 639-1 language code.
+    See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+    """
+    translate_client = translate.Client(credentials=credentials)
+    if isinstance(text, six.binary_type):
+        text = text.decode("utf-8")
+        # Text can also be a sequence of strings, in which case this method
+        # will return a sequence of results for each text.
+        result = translate_client.translate(text, target_language=target, model=model)
+    return(result["translatedText"])
+
+
 def get_frame_runtime(frameNumber,fps):
     return int(frameNumber/fps)
 
@@ -112,9 +129,15 @@ def get_unique_frames(raw_frames,fps):
         i = i+1
     return uniqueframes,frameNo,text,time
 
+lang_ocr='eng'
 def analyse_frame(frame):
-    output_text = pytesseract.image_to_string(Image.fromarray(frame), lang='eng')
+    output_text = pytesseract.image_to_string(Image.fromarray(frame), lang=lang_ocr)
     output_text = output_text.replace('\n','')
+    if lang_ocr!='eng':
+        try:
+            output_text = translate_text_with_model('en',output_text)
+        except Exception:
+            pass
     return output_text
 
 def Image_PreProcess(image):
