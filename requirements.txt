@@ -1,0 +1,19 @@
+opencv-python
+tqdm
+ipython
+pandas
+numpy
+matplotlib
+scikit-image
+regex
+six
+pytesseract
+pillow
+nltk
+python-math
+#pip install -U pip setuptools wheel
+spacy
+#python -m spacy download en_core_web_sm
+sklearn
+google-auth
+google-cloud-translate==2.0.1
